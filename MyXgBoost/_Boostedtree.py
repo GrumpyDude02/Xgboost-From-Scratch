@@ -1,4 +1,4 @@
-from _tree import _BaseTree
+from ._tree import _BaseTree
 import numpy as np, pandas as pd
 
 
