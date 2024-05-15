@@ -50,13 +50,15 @@ class _BoostedTreeRegressor(_BaseTree):
         score, split, direction = float("-inf"), None, "left"
         x = X.values[:, feature]
         idxs = np.argsort(x[x != 0])
+        h_sum, g_sum = h.sum(), g.sum()
+        g_sort, h_sort, x_sort = g[idxs], h[idxs], x[idxs]
+
         missing_idxs = np.where(x == 0)[0]
-        x_sort = x[idxs]
+        print(missing_idxs)
+
         split_idx = 0
         left_idxs, right_idxs = None, None
         n = len(x_sort) - 1
-        h_sum, g_sum = h.sum(), g.sum()
-        g_sort, h_sort = g[idxs], h[idxs]
 
         lhs_g, lhs_h = 0, 0
         rhs_g, rhs_h = g_sum, h_sum
