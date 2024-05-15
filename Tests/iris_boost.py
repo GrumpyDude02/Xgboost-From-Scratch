@@ -16,7 +16,7 @@ def run(params):
         X[f"class_{i}"] = X[f"class_{i}"].map(mapping)
     X.drop(columns=["class"], inplace=True)
     y = X.pop("sepal width (cm)")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=43)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.3, random_state=43)
     m = MyXgbModel(seed=43, parameters=params)
     m.fit(X_train, y_train)
     pred = m.predict(X_test)

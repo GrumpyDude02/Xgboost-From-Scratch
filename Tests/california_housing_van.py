@@ -11,7 +11,7 @@ def run(params):
     max_depth = params["max_depth"]
     min_sample_leaf = params["min_sample_leaf"]
     X, y = fetch_california_housing(as_frame=True, return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=43)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.3, random_state=43)
     m = MyDecisionTree(max_depth=max_depth, min_sample_leaf=min_sample_leaf)
     m.fit(X_train, y_train)
     pred = m.predict(X_test)

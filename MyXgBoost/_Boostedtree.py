@@ -52,29 +52,32 @@ class _BoostedTreeRegressor(_BaseTree):
         idxs = np.argsort(x[x != 0])
         missing_idxs = np.where(x == 0)[0]
         x_sort = x[idxs]
-        h_sum, g_sum = h.sum(), g.sum()
         split_idx = 0
         left_idxs, right_idxs = None, None
+        n = len(x_sort) - 1
+        h_sum, g_sum = h.sum(), g.sum()
+        g_sort, h_sort = g[idxs], h[idxs]
 
-        g_cumsum, h_cumsum = np.cumsum(g[idxs]), np.cumsum(h[idxs])
-        n = len(g_cumsum) - self.min_sample_leaf - 1
-        if n < 0:
-            return {"feature": feature, "split": split, "score": score, "left_idxs": left_idxs, "right_idxs": right_idxs}
+        lhs_g, lhs_h = 0, 0
+        rhs_g, rhs_h = g_sum, h_sum
         for i in range(n):
-            if h_cumsum[i] < self.min_child_weight or i < self.min_sample_leaf or x_sort[i + 1] == x_sort[i]:
+            lhs_g += g_sort[i]
+            lhs_h += h_sort[i]
+            rhs_g -= g_sort[i]
+            rhs_h -= h_sort[i]
+            if (
+                lhs_h < self.min_child_weight
+                or i < self.min_sample_leaf
+                or n - i < self.min_sample_leaf
+                or x_sort[i + 1] == x_sort[i]
+            ):
                 continue
-            rhs_h = h_sum - h_cumsum[i]
             if rhs_h < self.min_child_weight:
                 break
-            rhs_g = g_sum - g_cumsum[i]
 
             right_score = (
                 0.5
-                * (
-                    g_cumsum[i] ** 2 / (h_cumsum[i] + self.lambda_)
-                    + rhs_g**2 / (rhs_h + self.lambda_)
-                    - g_sum**2 / (h_sum + self.lambda_)
-                )
+                * (lhs_g**2 / (lhs_h + self.lambda_) + rhs_g**2 / (rhs_h + self.lambda_) - g_sum**2 / (h_sum + self.lambda_))
                 - self.gamma
             )
             if right_score > score:
@@ -83,21 +86,25 @@ class _BoostedTreeRegressor(_BaseTree):
                 direction = "right"
                 score = right_score
 
+        lhs_g, lhs_h = g_sum, h_sum
+        rhs_g, rhs_h = 0, 0
         for i in range(n, 1):
-            if h_cumsum[i] < self.min_child_weight or x_sort[i - 1] == x_sort[i] or i < self.min_sample_leaf:
+            lhs_g -= g_sort[i]
+            lhs_h -= h_sort[i]
+            rhs_g += g_sort[i]
+            rhs_h += h_sort[i]
+            if (
+                rhs_h < self.min_child_weight
+                or n - i < self.min_sample_leaf
+                or i < self.min_sample_leaf
+                or x_sort[i - 1] == x_sort[i]
+            ):
                 continue
-            lhs_h = h_sum - h_cumsum[i]
-
             if lhs_h < self.min_child_weight:
                 break
-            lhs_g = g_sum - g_cumsum[i]
             left_score = (
                 0.5
-                * (
-                    g_cumsum[i] ** 2 / (h_cumsum[i] + self.lambda_)
-                    + lhs_g**2 / (lhs_h + self.lambda_)
-                    - g_sum**2 / (h_sum + self.lambda_)
-                )
+                * (rhs_g**2 / (rhs_h + self.lambda_) + lhs_g**2 / (lhs_h + self.lambda_) - g_sum**2 / (h_sum + self.lambda_))
                 - self.gamma
             )
             if left_score > score:
