@@ -11,7 +11,7 @@ class _BaseTree:
             self.left = left
             self.right = right
 
-    def __init__(self, max_depth, min_sample_leaf) -> None:
+    def __init__(self, max_depth: int, min_sample_leaf: int) -> None:
         self.min_sample_leaf = min_sample_leaf
         self.max_depth = max_depth
         self.root = None
@@ -44,10 +44,10 @@ class _BaseTree:
         right = self._build_tree(X[right_idxs], y[right_idxs], depth - 1)
         return _BaseTree.Node(left, right, split=split, feature=feature)
 
-    def fit(self, X, y):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> Node:
         self.root = self._build_tree(X, y, self.max_depth)
 
-    def predict(self, X):
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
         return np.array([self._predict_row(x, self.root) for _, x in X.iterrows()])
 
     def _calculate_leaf_value(self, y):

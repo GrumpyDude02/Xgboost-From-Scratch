@@ -8,11 +8,11 @@ class MyDecisionTree(_BaseTree):
     "entropy",
     "mse" """
 
-    def _classification_leaf_value(y):
+    def _classification_leaf_value(y: np.ndarray) -> np.ndarray:
         uniques, count = np.unique(y, return_counts=True)
         return uniques[np.argmax(count)]
 
-    def _regression_leaf_value(y):
+    def _regression_leaf_value(y: np.ndarray) -> np.ndarray:
         return np.mean(y)
 
     Criterion = {
@@ -21,7 +21,7 @@ class MyDecisionTree(_BaseTree):
         "mse": (None, _regression_leaf_value),
     }
 
-    def __init__(self, max_depth=5, min_sample_leaf=10, criterion="mse") -> None:
+    def __init__(self, max_depth: int = 5, min_sample_leaf: int = 10, criterion="mse") -> None:
         super().__init__(max_depth, min_sample_leaf)
         self.loss_function, self._calculate_leaf_value = MyDecisionTree.Criterion.get(criterion, (None, None))
         if self._calculate_leaf_value is None:
@@ -31,7 +31,7 @@ class MyDecisionTree(_BaseTree):
         else:
             self._split_function = self._find_split
 
-    def _fast_find_split_regression(self, X, y, feature):
+    def _fast_find_split_regression(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
         x = X.values[:, feature]
         sort_idx = np.argsort(x)
         sort_y, sort_x = y.values[sort_idx], x[sort_idx]
@@ -60,7 +60,7 @@ class MyDecisionTree(_BaseTree):
             "score": best_score,
         }
 
-    def _find_split(self, X, y, feature):
+    def _find_split(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
         x = X.values[:, feature]
         y_vls = y.values
         sort_idxs = np.argsort(x)  # indexes that sort x

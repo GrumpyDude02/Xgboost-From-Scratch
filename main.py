@@ -1,4 +1,4 @@
-from Tests import iris_boost, california_housing_boost, california_housing_van, iris_van
+from Tests import iris_boost, california_housing_boost, california_housing_van, iris_van, binary_class_test
 
 
 def main():

@@ -11,6 +11,7 @@ class MyXgbModel:
         "learning_rate": 0.1,
         "max_depth": 5,
         "subsample": 0.8,
+        "min_sample_leaf":20,
         "lambda": 1.5,
         "gamma": 0.0,
         "min_child_weight": 25.0,
@@ -35,6 +36,7 @@ class MyXgbModel:
         "lambda": 1.5,
         "gamma": 0.0,
         "min_child_weight": 25.0,
+        "min_sample_leaf": 20,
         "base_prediction": 0.5,
         "objective": "reg:squarederror",
         "tree_method": "exact",
@@ -59,7 +61,7 @@ class MyXgbModel:
         self.rounds = self.parameters["n_estimators"]
         self.rng = np.random.default_rng(seed=seed)
 
-    def fit(self, X: pd.DataFrame, y: pd.Series | pd.DataFrame):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         learning_rate = self.parameters["learning_rate"]
         size = math.floor(self.parameters["subsample"] * len(X))
         curr_pred = self.parameters["base_prediction"] * np.ones(shape=len(y))
@@ -86,7 +88,7 @@ class MyXgbModel:
             if self.verbose:
                 print(f"Iteration {i+1}: Loss: {self.objective.loss(y,curr_pred)}")
 
-    def predict(self, X):
+    def predict(self, X) -> np.ndarray:
         return self.objective.activation_function(
             self.parameters["base_prediction"]
             + self.parameters["learning_rate"] * np.sum([tree.predict(X) for tree in self.trees], axis=0)

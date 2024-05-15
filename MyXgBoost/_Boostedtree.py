@@ -4,13 +4,14 @@ import numpy as np, pandas as pd
 
 class _BoostedTreeRegressor(_BaseTree):
 
-    def __init__(self, X: pd.DataFrame, boost_parameters, gradients, hessians) -> None:
+    def __init__(self, X: pd.DataFrame, boost_parameters: dict, gradients: np.ndarray, hessians: np.ndarray) -> None:
         super().__init__(boost_parameters["max_depth"], None)
         self.global_X = X
         self.global_g = gradients
         self.global_h = hessians
         self.boost_parameters = boost_parameters
         self.gradiants, self.hessians = gradients, hessians
+        self.min_sample_leaf = boost_parameters["min_sample_leaf"]
         self.min_child_weight = boost_parameters["min_child_weight"]
         self.gamma = boost_parameters["gamma"]
         self.lambda_ = boost_parameters["lambda"]
@@ -18,44 +19,31 @@ class _BoostedTreeRegressor(_BaseTree):
         method = self.boost_parameters["tree_method"]
         if method == "exact":
             self.find_split = self._exact_find_split
-        elif method == "approx":
-            self.find_split = self._weighted_quantile_sketch
         else:
             raise TypeError("Undifined Method")
         self.root = self._build_tree(X, gradients, hessians, self.max_depth)
 
-    def _calculate_leaf_value(self, y):
-        g, h = y
+    def _calculate_leaf_value(self, g: np.ndarray, h: np.ndarray):
         return -g.sum() / (h.sum() + self.lambda_)
 
-    def _build_tree(self, X, g, h, depth):
+    def _build_tree(self, X: pd.DataFrame, g: np.ndarray, h: np.ndarray, depth: int):
         if depth == 0:
-            return _BoostedTreeRegressor.Node(value=self._calculate_leaf_value((g, h)))
+            return _BoostedTreeRegressor.Node(value=self._calculate_leaf_value(g, h))
         score = float("-inf")
         feature, split = None, None
-        direction = "left"
-        missing_idxs = None
         for i in range(X.shape[1]):
             data = self.find_split(X, g, h, i)
             if data["score"] > score:
                 feature = data["feature"]
                 split = data["split"]
                 score = data["score"]
-                missing_idxs = data["missing_idxs"]
-                direction = data["direction"]
+                left_idxs = data["left_idxs"]
+                right_idxs = data["right_idxs"]
         if score == float("-inf"):
-            return _BoostedTreeRegressor.Node(value=self._calculate_leaf_value((g, h)))
-        x = X.iloc[:, feature]
-        x = x[x != 0]
-        left_idxs = x <= split
-        right_idxs = x > split
-        if missing_idxs is not None:
-            if direction == "left":
-                np.concatenate((left_idxs, missing_idxs))
-            else:
-                np.concatenate((right_idxs, missing_idxs))
-        left = self._build_tree(X[left_idxs], g[left_idxs], h[left_idxs], depth - 1)
-        right = self._build_tree(X[right_idxs], g[right_idxs], h[right_idxs], depth - 1)
+            return _BoostedTreeRegressor.Node(value=self._calculate_leaf_value(g, h))
+
+        left = self._build_tree(X.iloc[left_idxs], g[left_idxs], h[left_idxs], depth - 1)
+        right = self._build_tree(X.iloc[right_idxs], g[right_idxs], h[right_idxs], depth - 1)
         return _BoostedTreeRegressor.Node(left, right, split=split, feature=feature)
 
     def _exact_find_split(self, X: pd.DataFrame, g, h, feature):
@@ -65,11 +53,13 @@ class _BoostedTreeRegressor(_BaseTree):
         missing_idxs = np.where(x == 0)[0]
         x_sort = x[idxs]
         h_sum, g_sum = h.sum(), g.sum()
+        split_idx = 0
+        left_idxs, right_idxs = None, None
 
         g_cumsum, h_cumsum = np.cumsum(g[idxs]), np.cumsum(h[idxs])
-        n = len(g_cumsum) - 1
+        n = len(g_cumsum) - self.min_sample_leaf - 1
         for i in range(n):
-            if h_cumsum[i] < self.min_child_weight or x_sort[i + 1] == x_sort[i]:
+            if h_cumsum[i] < self.min_child_weight or i < self.min_sample_leaf or x_sort[i + 1] == x_sort[i]:
                 continue
             rhs_h = h_sum - h_cumsum[i]
             if rhs_h < self.min_child_weight:
@@ -86,12 +76,13 @@ class _BoostedTreeRegressor(_BaseTree):
                 - self.gamma
             )
             if right_score > score:
+                split_idx = i
                 split = (x_sort[i] + x_sort[i + 1]) * 0.5
                 direction = "right"
                 score = right_score
 
         for i in range(n, 1):
-            if h_cumsum[i] < self.min_child_weight or x_sort[i - 1] == x_sort[i]:
+            if h_cumsum[i] < self.min_child_weight or x_sort[i - 1] == x_sort[i] or i < self.min_sample_leaf:
                 continue
             lhs_h = h_sum - h_cumsum[i]
 
@@ -107,9 +98,15 @@ class _BoostedTreeRegressor(_BaseTree):
                 )
                 - self.gamma
             )
-            if right_score > score:
+            if left_score > score:
+                split_idx = i
                 split = (x_sort[i] + x_sort[i - 1]) * 0.5
                 direction = "left"
                 score = left_score
-
-        return {"feature": feature, "split": split, "score": score, "direction": direction, "missing_idxs": missing_idxs}
+        if direction == "left":
+            left_idxs = np.concatenate((idxs[:split_idx], missing_idxs))
+            right_idxs = idxs[split_idx:]
+        else:
+            right_idxs = np.concatenate((idxs[split_idx:], missing_idxs))
+            left_idxs = idxs[:split_idx]
+        return {"feature": feature, "split": split, "score": score, "left_idxs": left_idxs, "right_idxs": right_idxs}
