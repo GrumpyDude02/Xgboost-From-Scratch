@@ -33,86 +33,89 @@ class _BoostedTreeRegressor(_BaseTree):
             return _BoostedTreeRegressor.Node(value=self._calculate_leaf_value((g, h)))
         score = float("-inf")
         feature, split = None, None
+        direction = "left"
+        missing_idxs = None
         for i in range(X.shape[1]):
             data = self.find_split(X, g, h, i)
             if data["score"] > score:
                 feature = data["feature"]
                 split = data["split"]
                 score = data["score"]
+                missing_idxs = data["missing_idxs"]
+                direction = data["direction"]
         if score == float("-inf"):
             return _BoostedTreeRegressor.Node(value=self._calculate_leaf_value((g, h)))
         x = X.iloc[:, feature]
+        x = x[x != 0]
         left_idxs = x <= split
         right_idxs = x > split
+        if missing_idxs is not None:
+            if direction == "left":
+                np.concatenate((left_idxs, missing_idxs))
+            else:
+                np.concatenate((right_idxs, missing_idxs))
         left = self._build_tree(X[left_idxs], g[left_idxs], h[left_idxs], depth - 1)
         right = self._build_tree(X[right_idxs], g[right_idxs], h[right_idxs], depth - 1)
         return _BoostedTreeRegressor.Node(left, right, split=split, feature=feature)
 
-    def _weighted_quantile_sketch(self, X: pd.DataFrame, g, h, feature):
-        score = float("-inf")
-        split = None
-        x = X.values[:, feature]
-        idxs = np.argsort(x)
-        h_sum, g_sum = h.sum(), g.sum()
-        nan_flag = np.isnan(x[idxs]).sum() == 0
-        if nan_flag:
-            nan_g_sum, nan_h_sum = 0, 0
-            calc_score = self._calculate_score
-        else:
-            nan_idxs = idxs[len(idxs) - np.isnan(x[idxs]).sum() :]
-            idxs = idxs[: -np.isnan(x[idxs]).sum()]
-            nan_g_sum, nan_h_sum = g[nan_idxs].sum(), h[nan_idxs].sum()
-            calc_score = self._sparse_score
-        inv_h_sum = 1 / (h_sum + 1e-16)
-        g_cumsum, h_cumsum, x_sort = np.cumsum(g[idxs]), np.cumsum(h[idxs]), x[idxs]
-
-        diff = np.abs(h_cumsum[:-1] * inv_h_sum - h_cumsum[1:] * inv_h_sum)
-        precomputed_indices = np.where(diff < self.eps)[0]
-
-        for i in precomputed_indices:
-            if h_cumsum[i] < self.min_child_weight:
-                continue
-            rhs_h_sum = h_sum - h_cumsum[i]
-            if rhs_h_sum < self.min_child_weight:
-                break
-            rhs_g_sum = g_sum - g_cumsum[i]
-            curr_score = calc_score(g_sum, h_sum, rhs_g_sum, g_cumsum[i], rhs_h_sum, h_cumsum[i], nan_g_sum, nan_h_sum)
-            if curr_score > score:
-                score = curr_score
-                split = (x_sort[i] + x_sort[i + 1]) * 0.5
-
-        return {"feature": feature, "split": split, "score": score}
-
     def _exact_find_split(self, X: pd.DataFrame, g, h, feature):
-        score = float("-inf")
-        split = None
+        score, split, direction = float("-inf"), None, "left"
         x = X.values[:, feature]
+        idxs = np.argsort(x[x != 0])
+        missing_idxs = np.where(x == 0)
+        x_sort = x[idxs]
         h_sum, g_sum = h.sum(), g.sum()
-        idxs = np.argsort(x)
-        nan_flag = np.isnan(x[idxs]).sum() == 0
-        if nan_flag:
-            nan_g_sum, nan_h_sum = 0, 0
-            calc_score = self._calculate_score
-        else:
-            calc_score = self._sparse_score
-            nan_idxs = idxs[len(idxs) - np.isnan(x[idxs]).sum() :]
-            idxs = idxs[: -np.isnan(x[idxs]).sum()]
-            nan_g_sum, nan_h_sum = g[nan_idxs].sum(), h[nan_idxs].sum()
-        g_cumsum, h_cumsum, x_sort = np.cumsum(g[idxs]), np.cumsum(h[idxs]), x[idxs]
+        left_idxs = 0
+
+        g_cumsum, h_cumsum = np.cumsum(g[idxs]), np.cumsum(h[idxs])
         n = len(g_cumsum) - 1
         for i in range(n):
             if h_cumsum[i] < self.min_child_weight or x_sort[i + 1] == x_sort[i]:
                 continue
-            rhs_h_sum = h_sum - h_cumsum[i]
-            if rhs_h_sum < self.min_child_weight:
+            rhs_h = h_sum - h_cumsum[i]
+            if rhs_h < self.min_child_weight:
                 break
-            rhs_g_sum = g_sum - g_cumsum[i]
-            curr_score = calc_score(g_sum, h_sum, rhs_g_sum, g_cumsum[i], rhs_h_sum, h_cumsum[i], nan_g_sum, nan_h_sum)
-            if curr_score > score:
-                score = curr_score
-                split = (x_sort[i + 1] + x_sort[i]) * 0.5
+            rhs_g = g_sum - g_cumsum[i]
 
-        return {"feature": feature, "split": split, "score": score}
+            right_score = (
+                0.5
+                * (
+                    g_cumsum[i] ** 2 / (h_cumsum[i] + self.lambda_)
+                    + rhs_g**2 / (rhs_h + self.lambda_)
+                    - g_sum**2 / (h_sum + self.lambda_)
+                )
+                - self.gamma
+            )
+            if right_score > score:
+                left_idxs = i
+                split = (x_sort[i] + x_sort[i + 1]) * 0.5
+                direction = "right"
+                score = right_score
+
+        for i in range(n, 1):
+            if h_cumsum[i] < self.min_child_weight or x_sort[i - 1] == x_sort[i]:
+                continue
+            lhs_h = h_sum - h_cumsum[i]
+
+            if lhs_h < self.min_child_weight:
+                break
+            lhs_g = g_sum - g_cumsum[i]
+            left_score = (
+                0.5
+                * (
+                    g_cumsum[i] ** 2 / (h_cumsum[i] + self.lambda_)
+                    + lhs_g**2 / (lhs_h + self.lambda_)
+                    - g_sum**2 / (h_sum + self.lambda_)
+                )
+                - self.gamma
+            )
+            if right_score > score:
+                left_idxs = i
+                split = (x_sort[i] + x_sort[i - 1]) * 0.5
+                direction = "left"
+                score = left_score
+
+        return {"feature": feature, "split": split, "score": score, "direction": direction, "missing_idxs": missing_idxs}
 
     def _sparse_score(self, g_sum, h_sum, right_g, left_g, right_h, left_h, nan_g_sum, nan_h_sum):
         # excuse the repetition, function calls are slow
