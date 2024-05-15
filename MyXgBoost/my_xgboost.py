@@ -63,7 +63,10 @@ class MyXgbModel:
         self.rounds = self.parameters["n_estimators"]
         self.rng = np.random.default_rng(seed=seed)
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series, X_val=None, y_val=None) -> None:
+        offset = []
+        offset_val = []
+        curr_pred_val = None
         learning_rate = self.parameters["learning_rate"]
         size = math.floor(self.parameters["subsample"] * len(X))
         curr_pred = self.parameters["base_prediction"] * np.ones(shape=len(y))
@@ -87,11 +90,23 @@ class MyXgbModel:
             )
             curr_pred += learning_rate * tree.predict(X)
             self.trees.append(tree)
+            offset.append(self.objective.loss(y, curr_pred))
+            if X_val is not None and y_val is not None:
+                if curr_pred_val is None:
+                    curr_pred_val = self.parameters["base_prediction"] * np.ones(shape=len(y_val))
+
+                curr_pred_val += learning_rate * tree.predict(X_val)
+                offset_val.append(self.objective.loss(y_val, curr_pred_val))
             if self.verbose:
                 print(f"Iteration {i+1}: Loss: {self.objective.loss(y,curr_pred)}")
+
+        return {"error_train": offset, "rounds": i + 1, "error_val": offset_val}
 
     def predict(self, X) -> np.ndarray:
         return self.objective.activation_function(
             self.parameters["base_prediction"]
             + self.parameters["learning_rate"] * np.sum([tree.predict(X) for tree in self.trees], axis=0)
         )
+
+
+# model.fit(X_train, y_train, eval_metric=["error", "logloss"], eval_set=eval_set, verbose=True)

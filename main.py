@@ -11,7 +11,7 @@ from Tests import (
 
 def main():
     parameters = {
-        "learning_rate": 0.4,
+        "learning_rate": 0.1,
         "max_depth": 5,
         "subsample": 0.8,
         "min_sample_leaf": 20,
