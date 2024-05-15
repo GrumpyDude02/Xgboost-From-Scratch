@@ -2,7 +2,7 @@ from Tests import iris_boost, california_housing_boost, california_housing_van, 
 
 
 def main():
-    california_housing_boost.run("exact")
+    california_housing_boost.run("exact", rounds=50)
 
 
 if __name__ == "__main__":

@@ -62,10 +62,9 @@ class _BoostedTreeRegressor(_BaseTree):
         score, split, direction = float("-inf"), None, "left"
         x = X.values[:, feature]
         idxs = np.argsort(x[x != 0])
-        missing_idxs = np.where(x == 0)
+        missing_idxs = np.where(x == 0)[0]
         x_sort = x[idxs]
         h_sum, g_sum = h.sum(), g.sum()
-        left_idxs = 0
 
         g_cumsum, h_cumsum = np.cumsum(g[idxs]), np.cumsum(h[idxs])
         n = len(g_cumsum) - 1
@@ -87,7 +86,6 @@ class _BoostedTreeRegressor(_BaseTree):
                 - self.gamma
             )
             if right_score > score:
-                left_idxs = i
                 split = (x_sort[i] + x_sort[i + 1]) * 0.5
                 direction = "right"
                 score = right_score
@@ -110,42 +108,8 @@ class _BoostedTreeRegressor(_BaseTree):
                 - self.gamma
             )
             if right_score > score:
-                left_idxs = i
                 split = (x_sort[i] + x_sort[i - 1]) * 0.5
                 direction = "left"
                 score = left_score
 
         return {"feature": feature, "split": split, "score": score, "direction": direction, "missing_idxs": missing_idxs}
-
-    def _sparse_score(self, g_sum, h_sum, right_g, left_g, right_h, left_h, nan_g_sum, nan_h_sum):
-        # excuse the repetition, function calls are slow
-        right_score = (
-            0.5
-            * (
-                left_g**2 / (left_h + self.lambda_)
-                + (right_g + nan_g_sum) ** 2 / ((right_h + nan_g_sum) + self.lambda_)
-                - g_sum**2 / (h_sum + self.lambda_)
-            )
-            - self.gamma
-        )
-        left_score = (
-            0.5
-            * (
-                (left_g + nan_g_sum) ** 2 / (left_h + nan_g_sum + self.lambda_)
-                + right_g**2 / (right_h + self.lambda_)
-                - g_sum**2 / (h_sum + self.lambda_)
-            )
-            - self.gamma
-        )
-        return max(left_score, right_score)
-
-    def _calculate_score(self, g_sum, h_sum, right_g, left_g, right_h, left_h, nan_g_sum: float = 0, nan_h_sum: float = 0):
-        return (
-            0.5
-            * (
-                left_g**2 / (left_h + self.lambda_)
-                + right_g**2 / (right_h + self.lambda_)
-                - g_sum**2 / (h_sum + self.lambda_)
-            )
-            - self.gamma
-        )
