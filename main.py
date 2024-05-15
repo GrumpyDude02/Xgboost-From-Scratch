@@ -21,7 +21,8 @@ def main():
         "base_prediction": 0.5,
         "objective": "reg:squarederror",
         "tree_method": "exact",
-        "n_estimators": 10,
+        "n_estimators": 1000,
+        "base_prediction": 0.5,
         "verbosity": False,
     }
     iris_ogvscustom.run(parameters)
