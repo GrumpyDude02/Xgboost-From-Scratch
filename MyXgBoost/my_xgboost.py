@@ -1,6 +1,6 @@
 import numpy as np, pandas as pd, math
 import MyXgBoost.objectives as Objective
-from MyXgBoost._tree import _BoostedTreeRegressor
+from MyXgBoost._Boostedtree import _BoostedTreeRegressor
 
 # TODO [[maybe]]: implement softmax for multiclassification
 

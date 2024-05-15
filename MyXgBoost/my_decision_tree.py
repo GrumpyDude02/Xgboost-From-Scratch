@@ -23,7 +23,6 @@ class MyDecisionTree(_BaseTree):
 
     def __init__(self, max_depth=5, min_sample_leaf=10, criterion="mse") -> None:
         super().__init__(max_depth, min_sample_leaf)
-        self.type = type
         self.loss_function, self._calculate_leaf_value = MyDecisionTree.Criterion.get(criterion, (None, None))
         if self._calculate_leaf_value is None:
             raise Exception("Udefined Criterion")
