@@ -58,6 +58,8 @@ class _BoostedTreeRegressor(_BaseTree):
 
         g_cumsum, h_cumsum = np.cumsum(g[idxs]), np.cumsum(h[idxs])
         n = len(g_cumsum) - self.min_sample_leaf - 1
+        if n < 0:
+            return {"feature": feature, "split": split, "score": score, "left_idxs": left_idxs, "right_idxs": right_idxs}
         for i in range(n):
             if h_cumsum[i] < self.min_child_weight or i < self.min_sample_leaf or x_sort[i + 1] == x_sort[i]:
                 continue

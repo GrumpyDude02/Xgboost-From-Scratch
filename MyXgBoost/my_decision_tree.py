@@ -9,15 +9,16 @@ class MyDecisionTree(_BaseTree):
     "mse" """
 
     def _classification_leaf_value(y: np.ndarray) -> np.ndarray:
-        uniques, count = np.unique(y, return_counts=True)
-        return uniques[np.argmax(count)]
+        # uniques, count = np.unique(y, return_counts=True)
+        # return uniques[np.argmax(count)]
+        raise Exception("Method not yet implemented")
 
     def _regression_leaf_value(y: np.ndarray) -> np.ndarray:
         return np.mean(y)
 
     Criterion = {
-        "gini": (utils.gini_score, _classification_leaf_value),
-        "entropy": (utils.entropy_score, _classification_leaf_value),
+        "gini": (None, None),
+        "entropy": (None, None),
         "mse": (None, _regression_leaf_value),
     }
 
@@ -25,11 +26,8 @@ class MyDecisionTree(_BaseTree):
         super().__init__(max_depth, min_sample_leaf)
         self.loss_function, self._calculate_leaf_value = MyDecisionTree.Criterion.get(criterion, (None, None))
         if self._calculate_leaf_value is None:
-            raise Exception("Udefined Criterion")
-        elif self.loss_function is None:
-            self._split_function = self._fast_find_split_regression
-        else:
-            self._split_function = self._find_split
+            raise ValueError("Undefined Criterion")
+        self._split_function = self._fast_find_split_regression
 
     def _fast_find_split_regression(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
         x = X.values[:, feature]
@@ -60,10 +58,10 @@ class MyDecisionTree(_BaseTree):
             "score": best_score,
         }
 
-    def _find_split(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
+    def _generalized_find_split(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
         x = X.values[:, feature]
         y_vls = y.values
-        sort_idxs = np.argsort(x)  # indexes that sort x
+        sort_idxs = np.argsort(x)
         lhs = 0
         split = None
         score = float("inf")

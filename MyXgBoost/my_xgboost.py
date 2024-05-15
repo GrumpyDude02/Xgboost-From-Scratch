@@ -26,7 +26,7 @@ class MyXgbModel:
 
     objectives = {
         "reg:squarederror": Objective.SquaredErrorObjective(),
-        "binary:logistic": Objective.ClassificationObjective(),
+        "binary:logistic": None,
     }
 
     parameters = {
@@ -55,7 +55,9 @@ class MyXgbModel:
             assert self.parameters["subsample"] >= 0 and self.parameters["subsample"] <= 1
             assert self.parameters["eps"] >= 0 and self.parameters["eps"] <= 1
         obj = MyXgbModel.objectives.get(self.parameters["objective"])
-        self.objective = obj if obj is not None else self.parameters["objective"]
+        if obj is None:
+            raise ValueError("Undefined objective function. This model currently only supports regression tasks.")
+        self.objective = obj
         self.parameters = MyXgbModel.parameters if parameters is None else parameters
         self.verbose = self.parameters["verbosity"]
         self.rounds = self.parameters["n_estimators"]

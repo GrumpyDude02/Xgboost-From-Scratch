@@ -7,7 +7,7 @@ from .timer import timer
 
 
 @timer
-def run(method: str, verbose=False, rounds=0):
+def run(params):
     mapping = {True: 1, False: 0}
     X, y = load_iris(as_frame=True, return_X_y=True)
     X["class"] = y
@@ -17,7 +17,7 @@ def run(method: str, verbose=False, rounds=0):
     X.drop(columns=["class"], inplace=True)
     y = X.pop("sepal width (cm)")
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=43)
-    m = MyDecisionTree()
+    m = MyDecisionTree(max_depth=params["max_depth"], min_sample_leaf=params["min_sample_leaf"])
     m.fit(X_train, y_train)
     pred = m.predict(X_test)
     print(f"MSE:  {mean_squared_error(y_test, pred)}")

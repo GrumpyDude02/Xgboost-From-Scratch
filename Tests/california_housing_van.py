@@ -7,10 +7,12 @@ import numpy as np, pandas as pd
 
 
 @timer
-def run(method_criterion: str, verbose=False, rounds=0):
+def run(params):
+    max_depth = params["max_depth"]
+    min_sample_leaf = params["min_sample_leaf"]
     X, y = fetch_california_housing(as_frame=True, return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=43)
-    m = MyDecisionTree()
+    m = MyDecisionTree(max_depth=max_depth, min_sample_leaf=min_sample_leaf)
     m.fit(X_train, y_train)
     pred = m.predict(X_test)
     print(f"MSE:  {mean_squared_error(y_test, pred)}")
