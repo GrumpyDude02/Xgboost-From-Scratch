@@ -27,9 +27,9 @@ class MyDecisionTree(_BaseTree):
         self.loss_function, self._calculate_leaf_value = MyDecisionTree.Criterion.get(criterion, (None, None))
         if self._calculate_leaf_value is None:
             raise ValueError("Undefined Criterion")
-        self._split_function = self._fast_find_split_regression
+        self._split_function = self._fast_split_find_regression
 
-    def _fast_find_split_regression(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
+    def _fast_split_find_regression(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
         x = X.values[:, feature]
         sort_idx = np.argsort(x)
         sort_y, sort_x = y.values[sort_idx], x[sort_idx]
@@ -58,7 +58,7 @@ class MyDecisionTree(_BaseTree):
             "score": best_score,
         }
 
-    def _generalized_find_split(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
+    def _generalized_split_find(self, X: pd.DataFrame, y: pd.Series, feature: int) -> dict:
         x = X.values[:, feature]
         y_vls = y.values
         sort_idxs = np.argsort(x)

@@ -1,5 +1,5 @@
 import numpy as np, pandas as pd, math
-import MyXgBoost.objectives as Objective
+import MyXgBoost.objectives as objective
 from MyXgBoost._Boostedtree import _BoostedTreeRegressor
 
 # TODO [[maybe]]: implement softmax for multiclassification
@@ -25,11 +25,11 @@ class MyXgbModel:
     """
 
     objectives = {
-        "reg:squarederror": Objective.SquaredErrorObjective(),
+        "reg:squarederror": objective.SquaredErrorObjective(),
         "binary:logistic": None,
     }
 
-    parameters = {
+    default_parameters = {
         "learning_rate": 0.1,
         "max_depth": 5,
         "subsample": 0.8,
@@ -46,18 +46,18 @@ class MyXgbModel:
     }
 
     def __init__(self, parameters: dict = None, seed: int = None) -> None:
-        self.parameters = MyXgbModel.parameters if parameters is None else parameters
+        self.parameters = MyXgbModel.default_parameters if parameters is None else parameters
         if parameters is not None:
-            for key in MyXgbModel.parameters.keys():
+            for key in MyXgbModel.default_parameters.keys():
                 val = parameters.get(key)
-                self.parameters[key] = val if val is not None else MyXgbModel.parameters[key]
+                self.parameters[key] = val if val is not None else MyXgbModel.default_parameters[key]
             assert self.parameters["learning_rate"] >= 0 and self.parameters["learning_rate"] <= 1
             assert self.parameters["subsample"] >= 0 and self.parameters["subsample"] <= 1
             assert self.parameters["eps"] >= 0 and self.parameters["eps"] <= 1
         obj = MyXgbModel.objectives.get(self.parameters["objective"])
         if obj is None:
             raise ValueError("Undefined objective function. This model currently only supports regression tasks.")
-        self.objective = obj
+        self.objective: objective.Objective = obj
         self.parameters = MyXgbModel.parameters if parameters is None else parameters
         self.verbose = self.parameters["verbosity"]
         self.rounds = self.parameters["n_estimators"]
@@ -103,7 +103,7 @@ class MyXgbModel:
         return {"error_train": offset, "rounds": i + 1, "error_val": offset_val}
 
     def predict(self, X) -> np.ndarray:
-        return self.objective.activation_function(
+        return self.objective.convert(
             self.parameters["base_prediction"]
             + self.parameters["learning_rate"] * np.sum([tree.predict(X) for tree in self.trees], axis=0)
         )

@@ -2,10 +2,25 @@ import numpy as np
 from MyXgBoost.utils import sigmoid
 
 
-class SquaredErrorObjective:
+class Objective:
 
     def loss(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
-        return np.mean((y - pred) ** 2)
+        pass
+
+    def gradient(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
+        pass
+
+    def hessian(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
+        pass
+
+    def convert(self, pred: np.ndarray) -> np.ndarray:
+        pass
+
+
+class SquaredErrorObjective(Objective):
+
+    def loss(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
+        return np.mean(0.5 * (y - pred) ** 2)
 
     def gradient(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
         return pred - y
@@ -13,11 +28,11 @@ class SquaredErrorObjective:
     def hessian(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
         return np.ones(len(y))
 
-    def activation_function(self, pred: np.ndarray) -> np.ndarray:
+    def convert(self, pred: np.ndarray) -> np.ndarray:
         return pred
 
 
-class ClassificationObjective:
+class ClassificationObjective(Objective):
 
     def loss(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
         preds = sigmoid(pred)
@@ -31,7 +46,7 @@ class ClassificationObjective:
         preds = sigmoid(preds)
         return preds * (1 - preds)
 
-    def activation_function(self, preds: np.ndarray) -> np.ndarray:
+    def convert(self, preds: np.ndarray) -> np.ndarray:
         predicted_probas = sigmoid(np.full((preds.shape[0], 1), 1).flatten().astype("float64") + preds)
         final_preds = np.where(predicted_probas > np.mean(predicted_probas), 1, 0)
         return final_preds

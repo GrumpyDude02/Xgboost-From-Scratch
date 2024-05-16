@@ -7,15 +7,12 @@ class _BoostedTreeRegressor(_BaseTree):
     def __init__(self, X: pd.DataFrame, boost_parameters: dict, gradients: np.ndarray, hessians: np.ndarray) -> None:
         super().__init__(boost_parameters["max_depth"], None)
         self.global_X = X
-        self.global_g = gradients
-        self.global_h = hessians
         self.boost_parameters = boost_parameters
         self.gradiants, self.hessians = gradients, hessians
         self.min_sample_leaf = boost_parameters["min_sample_leaf"]
         self.min_child_weight = boost_parameters["min_child_weight"]
         self.gamma = boost_parameters["gamma"]
         self.lambda_ = boost_parameters["lambda"]
-        self.eps = self.boost_parameters["eps"]
         method = self.boost_parameters["tree_method"]
         if method == "exact":
             self.find_split = self._exact_find_split
