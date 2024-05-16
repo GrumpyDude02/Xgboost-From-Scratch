@@ -4,12 +4,13 @@ import numpy as np, pandas as pd
 class _BaseTree:
 
     class Node:
-        def __init__(self, left=None, right=None, value=None, split=None, feature=None) -> None:
+        def __init__(self, left=None, right=None, value=None, split=None, feature=None, score=None) -> None:
             self.split = split
             self.value = value
             self.feature = feature
             self.left = left
             self.right = right
+            self.score = score
 
     def __init__(self, max_depth: int, min_sample_leaf: int) -> None:
         self.min_sample_leaf = min_sample_leaf
@@ -42,7 +43,7 @@ class _BaseTree:
         right_idxs = x > split
         left = self._build_tree(X[left_idxs], y[left_idxs], depth - 1)
         right = self._build_tree(X[right_idxs], y[right_idxs], depth - 1)
-        return _BaseTree.Node(left, right, split=split, feature=feature)
+        return _BaseTree.Node(left, right, split=split, feature=feature, score=score)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> Node:
         self.root = self._build_tree(X, y, self.max_depth)

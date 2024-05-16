@@ -12,20 +12,20 @@ from Tests import (
 def main():
     parameters = {
         "learning_rate": 0.1,
-        "max_depth": 5,
+        "max_depth": 6,
         "subsample": 0.8,
-        "min_sample_leaf": 20,
+        "min_sample_leaf": 10,
         "lambda": 1.5,
         "gamma": 0.0,
         "min_child_weight": 25.0,
         "base_prediction": 0.5,
         "objective": "reg:squarederror",
         "tree_method": "exact",
-        "n_estimators": 1000,
+        "n_estimators": 1,
         "base_prediction": 0.5,
         "verbosity": False,
     }
-    iris_ogvscustom.run(parameters)
+    california_housing_van.run(parameters)
 
 
 if __name__ == "__main__":

@@ -28,12 +28,6 @@ def run(params):
     )
     og.fit(X_train, y_train)
     metrics = m.fit(X_train, y_train, X_test, y_test)
-
-    plt.plot(np.arange(1, metrics["rounds"] + 1), metrics["error_train"], label="Training Error")
-    plt.plot(np.arange(1, metrics["rounds"] + 1), metrics["error_val"], label="Validation Error")
-    plt.xlabel("Iterations")
-    plt.ylabel("Error")
-
     pred = m.predict(X_test)
     print("---------------------------My xgboost---------------------------")
     print(f"MSE:  {mean_squared_error(y_test, pred)}")

@@ -31,13 +31,7 @@ def run(params):
         base_score=params["base_prediction"],
     )
     og.fit(X_train, y_train)
-    metrics = m.fit(X_train, y_train, X_test, y_test)
-    print(len(metrics["error_val"]))
-    plt.plot(np.arange(1, metrics["rounds"] + 1), metrics["error_train"], label="Training Error")
-    plt.plot(np.arange(1, metrics["rounds"] + 1), metrics["error_val"], label="Validation Error")
-    plt.xlabel("Iterations")
-    plt.ylabel("Error")
-
+    m.fit(X_train, y_train)
     print("---------------------------My xgboost---------------------------")
     pred = m.predict(X_test)
     print(f"MSE:  {mean_squared_error(y_test, pred)}")
@@ -46,6 +40,3 @@ def run(params):
     pred = og.predict(X_test)
     print(f"MSE:  {mean_squared_error(y_test, pred)}")
     print(f"MAE:  {mean_absolute_error(y_test, pred)}")
-
-    plt.legend()
-    plt.show()

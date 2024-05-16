@@ -5,6 +5,7 @@ from .timer import timer
 from MyXgBoost import MyXgbModel
 import xgboost as xgb
 import numpy as np, pandas as pd
+from matplotlib import pyplot as plt
 
 
 @timer
