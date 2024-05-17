@@ -98,15 +98,15 @@ class MyXgbModel:
                 gradients=gradients,
                 hessians=hessians,
             )
+            offset.append(self.objective.loss(y, curr_pred))
             curr_pred += learning_rate * tree.predict(X)
             self.trees.append(tree)
-            offset.append(self.objective.loss(y, curr_pred))
+
             if X_val is not None and y_val is not None:
                 if curr_pred_val is None:
                     curr_pred_val = self.parameters["base_prediction"] * np.ones(shape=len(y_val))
-
-                curr_pred_val += learning_rate * tree.predict(X_val)
                 offset_val.append(self.objective.loss(y_val, curr_pred_val))
+                curr_pred_val += learning_rate * tree.predict(X_val)
             if self.verbose:
                 print(f"Iteration {i+1}: Loss: {self.objective.loss(y,curr_pred)}")
 
@@ -218,7 +218,7 @@ class MyXgbModel:
         gain - the average gain across all splits the feature is used in.
         cover[Not implemented] - the average coverage across all splits the feature is used in.
         total_gain - the total gain across all splits the feature is used in.
-        total_cover - the total coverage across all splits the feature is used in."""
+        total_cover[Not Implemented] - the total coverage across all splits the feature is used in."""
 
         fig, ax = plt.subplots()
 

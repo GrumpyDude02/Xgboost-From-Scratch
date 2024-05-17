@@ -21,11 +21,11 @@ def main():
         "base_prediction": 0.5,
         "objective": "reg:squarederror",
         "tree_method": "exact",
-        "n_estimators": 10,
+        "n_estimators": 100,
         "base_prediction": 0.5,
         "verbosity": False,
     }
-    california_housing_boost.run(parameters)
+    iris_ogvscustom.run(parameters)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ class _BoostedTreeRegressor(_BaseTree):
         self.lambda_ = boost_parameters["lambda"]
         method = self.boost_parameters["tree_method"]
         if method == "exact":
-            self.find_split = self._exact_find_split
+            self._split_function = self._exact_find_split
         else:
             raise TypeError("Undifined Method")
         self.root = self._build_tree(X, gradients, hessians, self.max_depth)
@@ -29,7 +29,7 @@ class _BoostedTreeRegressor(_BaseTree):
         score = float("-inf")
         feature, split = None, None
         for i in range(X.shape[1]):
-            data = self.find_split(X, g, h, i)
+            data = self._split_function(X, g, h, i)
             if data["score"] > score:
                 feature = data["feature"]
                 split = data["split"]
