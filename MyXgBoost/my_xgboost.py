@@ -49,6 +49,8 @@ class MyXgbModel:
     }
 
     def __init__(self, parameters: dict = None, seed: int = None) -> None:
+        self.X: pd.DataFrame = None
+        self.y: pd.Series = None
         self.parameters = MyXgbModel.default_parameters if parameters is None else parameters
         if parameters is not None:
             for key in MyXgbModel.default_parameters.keys():
@@ -67,6 +69,8 @@ class MyXgbModel:
         self.rng = np.random.default_rng(seed=seed)
 
     def fit(self, X: pd.DataFrame, y: pd.Series, X_val=None, y_val=None) -> None:
+        self.X = X
+        self.y = y
         offset = []
         offset_val = []
         curr_pred_val = None
@@ -206,3 +210,50 @@ class MyXgbModel:
                 font_size=font_size * 0.9,
             )
         ax.axis("off")
+
+    def plot_importance(self, importance_type="cover"):
+        """weight - the number of times a feature is used to split the data across all trees.
+        gain - the average gain across all splits the feature is used in.
+        cover[Not implemented] - the average coverage across all splits the feature is used in.
+        total_gain - the total gain across all splits the feature is used in.
+        total_cover - the total coverage across all splits the feature is used in."""
+
+        fig, ax = plt.subplots()
+
+        feature_importance = [{"num_times": 0, "num_obs": 0, "total_score": 0} for _ in range(self.X.shape[1])]
+        for i in range(len(self.trees)):
+            self._traverse(feature_importance, self.trees[i].root)
+
+        importance_type_calc = None
+        match importance_type:
+            case "gain":
+                importance_type_calc = lambda x: x["total_score"] / x["num_times"] if x["num_times"] != 0 else 0
+            case "weight":
+                importance_type_calc = lambda x: x["num_times"]
+            case "total_gain":
+                importance_type_calc = lambda x: x["total_gain"]
+            case _:
+                raise ValueError("Undifined type. Candidate types are: 'gain' , 'weight' , 'total_gain'.")
+
+        feature_values = [importance_type_calc(x) for x in feature_importance]
+        feature_labels = [self.X.columns[i] for i in range(len(feature_importance))]
+        sorted_pairs = sorted(zip(feature_values, feature_labels), key=lambda x: x[0], reverse=True)
+        feature_values, feature_labels = zip(*sorted_pairs)
+
+        y_positions = range(len(feature_importance))
+
+        ax.barh(y_positions, feature_values, align="center")
+        ax.set_yticks(y_positions)
+        ax.set_yticklabels(feature_labels)
+        ax.invert_yaxis()
+        ax.set_xlabel("Score")
+        ax.set_title("Feature Importance")
+
+    def _traverse(self, feature_importance, tree_node: _BoostedTreeRegressor.Node):
+        if tree_node.value is not None:
+            return
+        feature_importance[tree_node.feature]["num_times"] += 1
+        feature_importance[tree_node.feature]["num_obs"] += tree_node.obs_num
+        feature_importance[tree_node.feature]["total_score"] += tree_node.score
+        self._traverse(feature_importance, tree_node.left)
+        self._traverse(feature_importance, tree_node.right)

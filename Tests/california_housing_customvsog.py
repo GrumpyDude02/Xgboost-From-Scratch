@@ -26,8 +26,12 @@ def run(params):
         subsample=params["subsample"],
         base_score=params["base_prediction"],
     )
+
     og.fit(X_train, y_train)
-    metrics = m.fit(X_train, y_train, X_test, y_test)
+    m.fit(X_train, y_train)
+    imp_type = "weight"
+    xgb.plot_importance(og, importance_type=imp_type)
+    m.plot_importance(imp_type)
     pred = m.predict(X_test)
     print("---------------------------My xgboost---------------------------")
     print(f"MSE:  {mean_squared_error(y_test, pred)}")
@@ -36,5 +40,4 @@ def run(params):
     pred = og.predict(X_test)
     print(f"MSE:  {mean_squared_error(y_test, pred)}")
     print(f"MAE:  {mean_absolute_error(y_test, pred)}")
-    plt.legend()
     plt.show()

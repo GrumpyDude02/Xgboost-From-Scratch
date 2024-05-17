@@ -11,7 +11,7 @@ from Tests import (
 
 def main():
     parameters = {
-        "learning_rate": 0.1,
+        "learning_rate": 0.4,
         "max_depth": 6,
         "subsample": 0.8,
         "min_sample_leaf": 10,
@@ -25,7 +25,7 @@ def main():
         "base_prediction": 0.5,
         "verbosity": False,
     }
-    california_housing_van.run(parameters)
+    california_housing_customvsog.run(parameters)
 
 
 if __name__ == "__main__":

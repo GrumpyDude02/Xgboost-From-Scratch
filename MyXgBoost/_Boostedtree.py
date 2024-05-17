@@ -41,7 +41,7 @@ class _BoostedTreeRegressor(_BaseTree):
 
         left = self._build_tree(X.iloc[left_idxs], g[left_idxs], h[left_idxs], depth - 1)
         right = self._build_tree(X.iloc[right_idxs], g[right_idxs], h[right_idxs], depth - 1)
-        return _BoostedTreeRegressor.Node(left, right, split=split, feature=feature, score=score)
+        return _BoostedTreeRegressor.Node(left, right, split=split, feature=feature, score=score, obs_num=X.shape[0])
 
     def _exact_find_split(self, X: pd.DataFrame, g, h, feature):
         score, split, direction = float("-inf"), None, "left"
@@ -81,7 +81,7 @@ class _BoostedTreeRegressor(_BaseTree):
                 - self.gamma
             )
             if right_score > score:
-                split_idx = i
+                split_idx = i + 1
                 split = (x_sort[i] + x_sort[i + 1]) * 0.5
                 direction = "right"
                 score = right_score
@@ -108,7 +108,7 @@ class _BoostedTreeRegressor(_BaseTree):
                 - self.gamma
             )
             if left_score > score:
-                split_idx = i
+                split_idx = i + 1
                 split = (x_sort[i] + x_sort[i - 1]) * 0.5
                 direction = "left"
                 score = left_score
