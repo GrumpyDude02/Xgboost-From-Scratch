@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 def run(params):
     X, y = fetch_california_housing(as_frame=True, return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=43)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.77, random_state=43)
     params["base_prediction"] = np.mean(y)
     m = MyXgbModel(
         seed=43,

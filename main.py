@@ -25,7 +25,7 @@ def main():
         "base_prediction": 0.5,
         "verbosity": False,
     }
-    iris_ogvscustom.run(parameters)
+    california_housing_customvsog.run(parameters)
 
 
 if __name__ == "__main__":
