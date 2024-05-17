@@ -69,6 +69,8 @@ class MyXgbModel:
         self.rng = np.random.default_rng(seed=seed)
 
     def fit(self, X: pd.DataFrame, y: pd.Series, X_val=None, y_val=None) -> None:
+        """return an dictionary containing datapoints for plotting return
+        {'errors_train','error_val'}"""
         self.X = X
         self.y = y
         offset = []
@@ -136,7 +138,7 @@ class MyXgbModel:
         except IndexError:
             raise Exception("Tree number exceeds the number of trees created")
         if ax is None:
-            fig, ax = plt.subplots(figsize=(200, 100))
+            fig, ax = plt.subplots(figsize=(30, 25))
         self._rec_plot_tree(ax, tree.root, tree.max_depth, direction="left")
 
         return ax
@@ -163,7 +165,7 @@ class MyXgbModel:
                 ha="center",
                 va="center",
                 fontsize=font_size,
-                bbox=dict(facecolor="lightgreen", alpha=1, boxstyle="round"),
+                bbox=dict(facecolor="lightgreen", alpha=0.6, boxstyle="round"),
             )
         else:
             ax.text(
@@ -173,7 +175,7 @@ class MyXgbModel:
                 ha="center",
                 va="center",
                 fontsize=font_size,
-                bbox=dict(facecolor="lightblue", alpha=1, boxstyle="round"),
+                bbox=dict(facecolor="lightblue", alpha=0.6, boxstyle="round"),
             )
             new_level_width = level_width / 2
             new_y = y - dy
@@ -211,7 +213,7 @@ class MyXgbModel:
             )
         ax.axis("off")
 
-    def plot_importance(self, importance_type="cover"):
+    def plot_importance(self, importance_type="gain"):
         """weight - the number of times a feature is used to split the data across all trees.
         gain - the average gain across all splits the feature is used in.
         cover[Not implemented] - the average coverage across all splits the feature is used in.
