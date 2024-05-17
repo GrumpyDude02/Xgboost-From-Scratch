@@ -73,6 +73,7 @@ class MyXgbModel:
         {'errors_train','error_val'}"""
         self.X = X
         self.y = y
+        idxs = None
         offset = []
         offset_val = []
         curr_pred_val = None
@@ -123,14 +124,13 @@ class MyXgbModel:
         if self.trees == []:
             raise Exception("No dataset was fitted, this method was designed to run after fitting a dataset")
         errors = []
-        X_ = X.values
         y_ = y.values
-        base = self.base_score * np.ones(shape=len(y))
-        for e in self.estimators:
-            base += self.learning_rate * e.predict(X_)
-            errors.append(self.loss_function(base, y_))
+        pred = self.parameters["base_prediction"] * np.ones(shape=len(y))
+        for e in self.trees:
+            pred += self.parameters["learning_rate"] * e.predict(X)
+            errors.append(self.objective.loss(y_, pred))
 
-        return {"rounds": len(self.estimators), "error": errors}
+        return {"rounds": len(self.trees), "error": errors}
 
     def plot_tree(self, ax=None, num_trees=0):
         try:

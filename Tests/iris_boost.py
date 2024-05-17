@@ -15,7 +15,7 @@ def run(params):
         X[f"class_{i}"] = X[f"class_{i}"].map(mapping)
     X.drop(columns=["class"], inplace=True)
     y = X.pop("sepal width (cm)")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=37)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.77, random_state=37)
     m = MyXgbModel(seed=43, parameters=params)
     errors = m.fit(X_train, y_train, X_test, y_test)
     plt.plot(np.arange(1, errors["rounds"] + 1), errors["error_train"], label="Train dataset error")
