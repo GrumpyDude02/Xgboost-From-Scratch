@@ -68,7 +68,7 @@ class MyXgbModel:
         self.rounds = self.parameters["n_estimators"]
         self.rng = np.random.default_rng(seed=seed)
 
-    def fit(self, X: pd.DataFrame, y: pd.Series, X_val=None, y_val=None) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series, X_val=None, y_val=None) -> dict:
         """return an dictionary containing datapoints for plotting return
         {'errors_train','error_val'}"""
         self.X = X

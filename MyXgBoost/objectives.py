@@ -18,9 +18,9 @@ class Objective:
 
 
 class SquaredErrorObjective(Objective):
-
+    # (1/2)*(y - y_hat) ** 2)
     def loss(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
-        return np.mean(0.5 * (y - pred) ** 2)
+        return np.mean((y - pred) ** 2)
 
     def gradient(self, y: np.ndarray, pred: np.ndarray) -> np.ndarray:
         return pred - y

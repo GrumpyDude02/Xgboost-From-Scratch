@@ -11,7 +11,7 @@ from Tests import (
 
 def main():
     parameters = {
-        "learning_rate": 0.3,
+        "learning_rate": 0.4,
         "max_depth": 5,
         "subsample": 0.8,
         "min_sample_leaf": 20,
@@ -25,7 +25,7 @@ def main():
         "base_prediction": 0.5,
         "verbosity": False,
     }
-    california_housing_customvsog.run(parameters)
+    iris_boost.run(parameters)
 
 
 if __name__ == "__main__":

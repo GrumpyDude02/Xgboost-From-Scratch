@@ -5,11 +5,10 @@ import numpy as np, pandas as pd
 class _BoostedTreeRegressor(_BaseTree):
 
     def __init__(self, X: pd.DataFrame, boost_parameters: dict, gradients: np.ndarray, hessians: np.ndarray) -> None:
-        super().__init__(boost_parameters["max_depth"], None)
+        super().__init__(boost_parameters["max_depth"], boost_parameters["min_sample_leaf"])
         self.global_X = X
         self.boost_parameters = boost_parameters
         self.gradiants, self.hessians = gradients, hessians
-        self.min_sample_leaf = boost_parameters["min_sample_leaf"]
         self.min_child_weight = boost_parameters["min_child_weight"]
         self.gamma = boost_parameters["gamma"]
         self.lambda_ = boost_parameters["lambda"]
@@ -67,7 +66,7 @@ class _BoostedTreeRegressor(_BaseTree):
             rhs_h -= h_sort[i]
             if (
                 lhs_h < self.min_child_weight
-                or i < self.min_sample_leaf
+                or i + 1 < self.min_sample_leaf
                 or n - i < self.min_sample_leaf
                 or x_sort[i + 1] == x_sort[i]
             ):
@@ -96,7 +95,7 @@ class _BoostedTreeRegressor(_BaseTree):
             if (
                 rhs_h < self.min_child_weight
                 or n - i < self.min_sample_leaf
-                or i < self.min_sample_leaf
+                or i + 1 < self.min_sample_leaf
                 or x_sort[i - 1] == x_sort[i]
             ):
                 continue
