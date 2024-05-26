@@ -29,7 +29,7 @@ class MyXgbModel:
 
     objectives = {
         "reg:squarederror": objective.SquaredErrorObjective(),
-        "binary:logistic": None,
+        "binary:logistic": objective.ClassificationObjective(),
     }
 
     default_parameters = {

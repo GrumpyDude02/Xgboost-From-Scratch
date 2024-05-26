@@ -45,14 +45,14 @@ class _BoostedTreeRegressor(_BaseTree):
     def _exact_find_split(self, X: pd.DataFrame, g, h, feature):
         score, split, direction = float("-inf"), None, "left"
         x = X.values[:, feature]
-        idxs = np.argsort(x[x != 0])
+        idxs = np.argsort(x[~np.isnan(x)])
         h_sum, g_sum = h.sum(), g.sum()
         x_sort = x[idxs]
         n = len(x_sort) - 1
         if n <= 0:
             return {"feature": feature, "split": split, "score": score, "left_idxs": None, "right_idxs": None}
         g_sort, h_sort = g[idxs], h[idxs]
-        missing_idxs = np.where(x == 0)[0]
+        missing_idxs = np.where(np.isnan(x))[0]
 
         split_idx = 0
         left_idxs, right_idxs = None, None

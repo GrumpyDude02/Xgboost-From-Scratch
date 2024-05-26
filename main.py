@@ -1,5 +1,6 @@
 from Tests import (
     iris_boost,
+    binary_class_test,
     california_housing_boost,
     california_housing_van,
     iris_van,
@@ -19,13 +20,13 @@ def main():
         "gamma": 0.0,
         "min_child_weight": 25.0,
         "base_prediction": 0.5,
-        "objective": "reg:squarederror",
+        "objective": "binary:logistic",
         "tree_method": "exact",
-        "n_estimators": 100,
+        "n_estimators": 10,
         "base_prediction": 0.5,
         "verbosity": False,
     }
-    iris_boost.run(parameters)
+    binary_class_test.run(parameters)
 
 
 if __name__ == "__main__":
