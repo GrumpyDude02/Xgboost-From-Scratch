@@ -1,6 +1,5 @@
 from Tests import (
     iris_boost,
-    binary_class_test,
     california_housing_boost,
     california_housing_van,
     iris_van,
